@@ -1,0 +1,158 @@
+version: "3"
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.1
+    environment:
+      - discovery.type=single-node
+    ports:
+    - "9200:9200"
+    - "9300:9300"
+    # networks:
+    #    - elastic
+
+  kibana:
+    image:  docker.elastic.co/kibana/kibana:7.5.1
+
+    volumes:
+    - ./configs/kibana/:/usr/share/kibana/config/
+
+    ports:
+    - "5601:5601"
+    links:
+    - elasticsearch
+    depends_on:
+    - elasticsearch
+    environment:
+      SERVER_NAME: kibana.example.org
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+
+    # networks:
+    #    - elastic
+
+  logstash:
+    image:  docker.elastic.co/logstash/logstash:7.5.1
+    links:
+    - elasticsearch
+    volumes:
+    - ./configs/logstash:/config-dir
+    - ./data:/home/data
+    command: logstash -f /config-dir/logstash.conf
+    depends_on:
+    - elasticsearch
+    # networks:
+    #    - elastic
+
+  portainer:
+    image: portainer/portainer
+    command: -H unix:///var/run/docker.sock --no-auth
+    restart: always
+    ports:
+      - 9000:9000
+      - 8000:8000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # networks:
+    #    - elastic
+
+# networks:
+#   elastic:
+#     driver: bridge
+
+
+# version: '3'
+# services:
+
+# # Elastic Search Query Engine
+
+#   elasticsearch:
+#     image: docker.elastic.co/elasticsearch/elasticsearch
+#     environment:
+#       - discovery.type=single-node
+#     ports:
+#       - 9200:9200
+
+
+# # Dashboard http://localhost:5601
+
+#   kibana:
+#     image: docker.elastic.co/kibana/kibana
+#     ports:
+#       - 5601:5601
+
+
+# # ### Portainer
+
+#   portainer:
+#     image: portainer/portainer
+#     command: -H unix:///var/run/docker.sock
+#     restart: always
+#     ports:
+#       - 9000:9000
+#       - 8000:8000
+#     volumes:
+#       - /var/run/docker.sock:/var/run/docker.sock
+
+
+
+# # version: '2'
+# # services:
+
+# # ### Elastic Search
+# #   es01:
+# #       image: docker.elastic.co/elasticsearch/elasticsearch:7.5.1
+# #       container_name: es01
+# #       environment:
+# #         - discovery.type=single-node
+# #         # - node.name=es01
+# #         # - cluster.name=es-docker-cluster
+# #         # - discovery.seed_hosts=es02,es03
+# #         # - cluster.initial_master_nodes=es01 #,es02,es03
+# #         # - bootstrap.memory_lock=true
+# #         # - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+# #       ulimits:
+# #         memlock:
+# #           soft: -1
+# #           hard: -1
+# #       volumes:
+# #         - data01:/usr/share/elasticsearch/data
+# #       ports:
+# #         - 9200:9200
+# #       networks:
+# #        - elastic
+
+# # ### Kibana
+
+# #   kibana:
+# #     image: docker.elastic.co/kibana/kibana:7.5.1
+# #     environment:
+# #       SERVER_NAME: kibana.example.org
+# #       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+# #     volumes:
+# #       - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+# #     networks:
+# #         - elastic
+
+# # ### Portainer
+
+# #   portainer:
+# #     image: portainer/portainer
+# #     command: -H unix:///var/run/docker.sock
+# #     restart: always
+# #     ports:
+# #       - 9000:9000
+# #       - 8000:8000
+# #     volumes:
+# #       - /var/run/docker.sock:/var/run/docker.sock
+
+# # volumes:
+# #   data01:
+# #     driver: local
+# #   data02:
+# #     driver: local
+# #   data03:
+# #     driver: local
+
+# # networks:
+# #   elastic:
+# #     driver: bridge
